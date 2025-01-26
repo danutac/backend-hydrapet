@@ -93,8 +93,27 @@ Backend subskrybuje następujące tematy MQTT:
 - `device/+/status`: Komunikaty wysyłane przez urządzenie do backendu z informacjami o statusie.
 - `device/+/schedule`: Harmonogramy działania urządzenia.
 
-Aby przetestować publikację na tematy MQTT, można użyć mosquitto_pub:
+### Przydatne komendy
+
+#### Usunięcie woluminów i ponowne budowanie:
 ```sh
-mosquitto_pub -h <MQTT_BROKER_HOST> -t "device/1/command" -m '{"command": "START"}'
+docker-compose down -v
+docker-compose up --build
+```
 
+#### Dostęp do bazy danych PostgreSQL w kontenerze:
+```sh
+docker exec -it backend-hydrapet-db-1 psql -U postgres
+```
 
+#### Sprawdzenie czy tabele załadowały się poprawnie:
+```sh 
+\dt
+```
+#### Ręczne załadowanie skryptu
+```sh 
+docker cp db/init.sql backend-hydrapet-db-1:/init.sql 
+docker exec -it backend-hydrapet-db-1 psql -U postgres
+\i /init.sql
+\dt
+```
