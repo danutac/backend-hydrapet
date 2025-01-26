@@ -2,9 +2,12 @@
 -- Tabela: Owners (właściciele)
 CREATE TABLE owners (
     owner_id SERIAL PRIMARY KEY,
+    username VARCHAR(255) UNIQUE NOT NULL, -- Unikalna nazwa użytkownika
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
-    phone_number VARCHAR(20)
+    phone_number VARCHAR(20),
+    password_hash VARCHAR(255) NOT NULL, -- Hasło w postaci zahaszowanej
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Data rejestracji
 );
 
 -- Tabela: Devices (poidełka)
@@ -49,8 +52,9 @@ CREATE INDEX idx_action_logs_timestamp ON action_logs (timestamp);
 
 -- Przykładowe dane testowe
 -- Dodanie właściciela
-INSERT INTO owners (name, email, phone_number)
-VALUES ('John Doe', 'john.doe@example.com', '123456789');
+INSERT INTO owners (username, name, email, phone_number, password_hash)
+VALUES 
+('johndoe', 'John Doe', 'john.doe@example.com', '123456789', 'hashed_password_example');
 
 -- Dodanie urządzenia
 INSERT INTO devices (owner_id, name)

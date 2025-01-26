@@ -8,7 +8,7 @@ services:
       - DB_HOST=db
       - DB_PORT=5432
       - DB_USER=postgres
-      - DB_PASSWORD=yourpassword
+      - DB_PASSWORD=poidelko123
       - DB_NAME=yourdatabase
       - MQTT_HOST=mqtt
       - MQTT_PORT=1883
@@ -21,11 +21,11 @@ services:
     restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: yourpassword
+      POSTGRES_PASSWORD: poidelko123
       POSTGRES_DB: yourdatabase
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./db_server.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
 
   mqtt:
     image: eclipse-mosquitto:2
