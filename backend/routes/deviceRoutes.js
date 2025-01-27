@@ -1,6 +1,6 @@
 const express = require('express');
 const pool = require('../config/db');
-const { requestDeviceTime, publishSetWater, requestWaterState, deleteAlarm, pourWater, resetTare } = require('../config/mqtt');
+const { requestDeviceTime, publishSetWater, requestWaterState, deleteAlarm, pourWater, resetTare, publishSetTime } = require('../config/mqtt');
 const authenticate = require('../middleware/authMiddleware'); 
 
 const router = express.Router();
