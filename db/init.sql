@@ -1,4 +1,3 @@
-
 -- Tabela: Owners (właściciele)
 CREATE TABLE owners (
     owner_id SERIAL PRIMARY KEY,
@@ -26,28 +25,39 @@ CREATE TABLE schedule (
     amount_ml INT NOT NULL CHECK (amount_ml > 0)
 );
 
--- Tabela: DeviceStatus (stan urządzenia) - info o urzadzeniu
+-- Tabela: DeviceStatus (stan urządzenia)
 CREATE TABLE device_status (
     status_id SERIAL PRIMARY KEY,
     device_id INT NOT NULL REFERENCES devices(device_id) ON DELETE CASCADE,
-    water_available BOOLEAN NOT NULL,
-    bowl_weight DECIMAL(10, 2) CHECK (bowl_weight >= 0),
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    weight DECIMAL(10, 2) CHECK (weight >= 0), -- Waga
+    button_state VARCHAR(50) NOT NULL, -- Stan przycisku (np. RELEASED/PRESSED)
+    led_state VARCHAR(50) NOT NULL, -- Stan diody (np. ON/OFF)
+    motor_state VARCHAR(50) NOT NULL, -- Stan silnika (np. ON/OFF)
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Czas ostatniej aktualizacji
 );
 
--- Tabela: ActionLogs (logi działania) - info o dzialaniu (nalewaniu wody)
+-- Tabela: DeviceAlarms (zaplanowane alarmy)
+CREATE TABLE device_alarms (
+    alarm_id SERIAL PRIMARY KEY,
+    device_id INT NOT NULL REFERENCES devices(device_id) ON DELETE CASCADE,
+    timestamp TIMESTAMP NOT NULL, -- Czas alarmu
+    target_weight DECIMAL(10, 2) DEFAULT 200.0 CHECK (target_weight > 0), -- Docelowa waga wody
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Data utworzenia alarmu
+);
+
+-- Tabela: ActionLogs (logi działania)
 CREATE TABLE action_logs (
     log_id SERIAL PRIMARY KEY,
     device_id INT NOT NULL REFERENCES devices(device_id) ON DELETE CASCADE,
     action_type VARCHAR(50) NOT NULL,
     amount_ml INT CHECK (amount_ml >= 0),
+    description TEXT,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-ALTER TABLE action_logs ADD COLUMN description TEXT;
-
 -- Dodanie indeksów dla optymalizacji
-CREATE INDEX idx_device_status_updated_at ON device_status (updated_at);
+CREATE INDEX idx_device_status_timestamp ON device_status (timestamp);
+CREATE INDEX idx_device_alarms_timestamp ON device_alarms (timestamp);
 CREATE INDEX idx_action_logs_timestamp ON action_logs (timestamp);
 
 -- Przykładowe dane testowe
@@ -66,11 +76,17 @@ VALUES (1, '08:00:00', 500),
        (1, '18:00:00', 500);
 
 -- Dodanie stanu urządzenia
-INSERT INTO device_status (device_id, water_available, bowl_weight)
-VALUES (1, TRUE, 350.00);
+INSERT INTO device_status (device_id, weight, button_state, led_state, motor_state)
+VALUES (1, 350.00, 'RELEASED', 'ON', 'OFF');
+
+-- Dodanie alarmu
+INSERT INTO device_alarms (device_id, timestamp, target_weight)
+VALUES 
+(1, '2025-01-27T10:00:00', 200.00),
+(1, '2025-01-28T12:30:00', 250.00);
 
 -- Dodanie logu akcji
-INSERT INTO action_logs (device_id, action_type, amount_ml)
-VALUES (1, 'fill_water', 500);
+INSERT INTO action_logs (device_id, action_type, amount_ml, description)
+VALUES (1, 'fill_water', 500, 'Filled the bowl with 500 ml of water');
 
 ALTER USER postgres WITH PASSWORD 'poidelko123';

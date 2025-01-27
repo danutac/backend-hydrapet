@@ -80,4 +80,27 @@ router.delete('/:scheduleId', authenticate, async (req, res) => {
   }
 });
 
+// Wyślij harmonogram do urządzenia
+router.post('/:deviceId/send-schedule', authenticate, async (req, res) => {
+  const { deviceId } = req.params;
+
+  try {
+    const deviceCheck = await pool.query('SELECT * FROM devices WHERE device_id = $1 AND owner_id = $2', [deviceId, req.user.owner_id]);
+    if (deviceCheck.rows.length === 0) {
+      return res.status(403).send({ error: 'You do not have access to this device.' });
+    }
+
+    const schedule = await pool.query('SELECT * FROM schedule WHERE device_id = $1 ORDER BY time', [deviceId]);
+
+    const topic = `hydrapet${deviceId}/update/set/schedule`;
+    mqttClient.publish(topic, JSON.stringify({ schedule: schedule.rows }));
+
+    res.status(200).send({ message: 'Schedule sent to device successfully.' });
+  } catch (err) {
+    console.error('Error sending schedule:', err);
+    res.status(500).send({ error: 'Error sending schedule.' });
+  }
+});
+
+
 module.exports = router;
