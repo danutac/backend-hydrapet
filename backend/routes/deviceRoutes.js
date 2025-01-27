@@ -35,6 +35,26 @@ router.post('/', authenticate, async (req, res) => {
   }
 });
 
+// Endpoint: Pobranie szczegółów urządzenia
+router.get('/:id/details', authenticate, async (req, res) => {
+  try {
+    const deviceCheck = await pool.query('SELECT * FROM devices WHERE device_id = $1 AND owner_id = $2', [req.params.id, req.user.owner_id]);
+    if (deviceCheck.rows.length === 0) {
+      return res.status(403).send('You do not have access to this device');
+    }
+
+    const result = await pool.query(
+      'SELECT * FROM devices WHERE device_id = $1',
+      [req.params.id]
+    );
+
+    res.status(200).json(result.rows[0]);
+  } catch (err) {
+    console.error('Error retrieving device details:', err);
+    res.status(500).send('Error retrieving device details');
+  }
+});
+
 // Pobierz status urządzenia (z weryfikacją właściciela)
 router.get('/:id/status', authenticate, async (req, res) => {
   try {
@@ -51,6 +71,31 @@ router.get('/:id/status', authenticate, async (req, res) => {
   } catch (err) {
     console.error('Error retrieving device status:', err);
     res.status(500).send('Error retrieving device status');
+  }
+});
+
+// Endpoint: Statystyki użycia urządzenia
+router.get('/:id/statistics', authenticate, async (req, res) => {
+  try {
+    const deviceCheck = await pool.query('SELECT * FROM devices WHERE device_id = $1 AND owner_id = $2', [req.params.id, req.user.owner_id]);
+    if (deviceCheck.rows.length === 0) {
+      return res.status(403).send('You do not have access to this device');
+    }
+
+    const result = await pool.query(
+      `SELECT
+         COUNT(*) AS total_actions,
+         SUM(amount_ml) AS total_water_dispensed,
+         MAX(timestamp) AS last_action_time
+       FROM action_logs
+       WHERE device_id = $1`,
+      [req.params.id]
+    );
+
+    res.status(200).json(result.rows[0]);
+  } catch (err) {
+    console.error('Error retrieving device statistics:', err);
+    res.status(500).send('Error retrieving device statistics');
   }
 });
 
