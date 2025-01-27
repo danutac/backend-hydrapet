@@ -16,6 +16,25 @@ router.get('/', authenticate, async (req, res) => {
   }
 });
 
+// Dodaj nowe urządzenie (przypisane do zalogowanego użytkownika)
+router.post('/', authenticate, async (req, res) => {
+  const { name } = req.body; // Nazwa urządzenia wysłana w body żądania
+
+  try {
+    // Dodanie nowego urządzenia do bazy danych
+    const result = await pool.query(
+      'INSERT INTO devices (owner_id, name) VALUES ($1, $2) RETURNING *',
+      [req.user.owner_id, name]
+    );
+
+    // Zwrócenie odpowiedzi z dodanym urządzeniem
+    res.status(201).json({ message: 'Device added successfully', device: result.rows[0] });
+  } catch (err) {
+    console.error('Error adding device:', err);
+    res.status(500).send({ error: 'Error adding device' });
+  }
+});
+
 // Pobierz status urządzenia (z weryfikacją właściciela)
 router.get('/:id/status', authenticate, async (req, res) => {
   try {
