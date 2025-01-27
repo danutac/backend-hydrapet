@@ -2,7 +2,7 @@ const express = require('express');
 const authRoutes = require('./routes/authRoutes');
 const deviceRoutes = require('./routes/deviceRoutes');
 const scheduleRoutes = require('./routes/scheduleRoutes');
-const mqttClient = require('./config/mqtt');
+const { mqttClient } = require('./config/mqtt');
 
 const app = express();
 app.use(express.json());

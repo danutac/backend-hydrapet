@@ -31,6 +31,14 @@ mqttClient.on('connect', () => {
   mqttClient.subscribe('hydrapet+/update/get/water', (err) => {
     if (!err) console.log('Subscribed to get/water');
   });
+
+  mqttClient.subscribe('hydrapet+/hydrapetinfo/watertanklevel', (err) => {
+    if (!err) console.log('Subscribed to watertanklevel');
+  });
+
+  mqttClient.subscribe('hydrapet+/hydrapetinfo/watertank', (err) => {
+    if (!err) console.log('Subscribed to watertank');
+  });
 });
 
 mqttClient.on('message', async (topic, message) => {
@@ -106,6 +114,29 @@ mqttClient.on('message', async (topic, message) => {
         [serialNumber, parsedMessage.water_state]
       );
       console.log('Water state updated in database');
+    } else if (topic.includes('/hydrapetinfo/watertanklevel')) {
+      // Obsługa poziomu wody
+      const waterLevelState = payload === 'Below 30%' ? 0 : 1;
+      await pool.query(
+        `UPDATE device_status
+         SET water_available = $1, updated_at = NOW()
+         WHERE device_id = (SELECT device_id FROM devices WHERE name = $2)`,
+        [waterLevelState, serialNumber]
+      );
+      console.log('Water tank level updated in database:', payload);
+    } else if (topic.includes('/hydrapetinfo/watertank')) {
+      // Obsługa krytycznych alertów
+      if (payload === 'empty') {
+        await pool.query(
+          `INSERT INTO action_logs (device_id, action_type, description, timestamp)
+           VALUES (
+             (SELECT device_id FROM devices WHERE name = $1),
+             $2, $3, NOW()
+           )`,
+          [serialNumber, 'alert', 'Water tank empty']
+        );
+        console.log('Critical alert logged: Water tank empty');
+      }
     }
   } catch (err) {
     console.error('Error processing MQTT message:', err);
@@ -214,5 +245,5 @@ module.exports = {
   requestWaterState,
   deleteAlarm,
   pourWater,
-  resetTare
+  resetTare,
 };

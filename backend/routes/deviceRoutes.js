@@ -258,4 +258,59 @@ router.post('/:id/set-tare', authenticate, async (req, res) => {
   }
 });
 
+// Pobierz poziom wody z bazy danych
+router.get('/:id/water-tank-level', authenticate, async (req, res) => {
+  try {
+    const deviceCheck = await pool.query(
+      'SELECT * FROM devices WHERE device_id = $1 AND owner_id = $2',
+      [req.params.id, req.user.owner_id]
+    );
+    if (deviceCheck.rows.length === 0) {
+      return res.status(403).send('You do not have access to this device');
+    }
+
+    const result = await pool.query(
+      'SELECT water_available, updated_at FROM device_status WHERE device_id = $1',
+      [req.params.id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).send('No water tank level data available for this device');
+    }
+
+    const waterLevelStatus = result.rows[0].water_available === 0 ? 'Below 30%' : 'Water tank is full';
+    res.status(200).json({ status: waterLevelStatus, updated_at: result.rows[0].updated_at });
+  } catch (err) {
+    console.error('Error retrieving water tank level:', err);
+    res.status(500).send('Error retrieving water tank level');
+  }
+});
+
+// Pobierz logi krytycznych alertów dla urządzenia
+router.get('/:id/water-tank-alerts', authenticate, async (req, res) => {
+  try {
+    const deviceCheck = await pool.query(
+      'SELECT * FROM devices WHERE device_id = $1 AND owner_id = $2',
+      [req.params.id, req.user.owner_id]
+    );
+    if (deviceCheck.rows.length === 0) {
+      return res.status(403).send('You do not have access to this device');
+    }
+
+    const result = await pool.query(
+      `SELECT description, timestamp
+       FROM action_logs
+       WHERE device_id = $1 AND action_type = 'alert'
+       ORDER BY timestamp DESC`,
+      [req.params.id]
+    );
+
+    res.status(200).json(result.rows);
+  } catch (err) {
+    console.error('Error retrieving water tank alerts:', err);
+    res.status(500).send('Error retrieving water tank alerts');
+  }
+});
+
+
 module.exports = router;
