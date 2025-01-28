@@ -21,6 +21,7 @@ CREATE TABLE devices (
 CREATE TABLE schedule (
     schedule_id SERIAL PRIMARY KEY,
     device_id INT NOT NULL REFERENCES devices(device_id) ON DELETE CASCADE,
+    day VARCHAR(10) NOT NULL DEFAULT 'Monday', -- Dzień tygodnia
     time TIME NOT NULL,
     amount_ml INT NOT NULL CHECK (amount_ml > 0)
 );
@@ -91,10 +92,10 @@ VALUES
 -- Dodanie harmonogramów
 INSERT INTO schedule (device_id, time, amount_ml)
 VALUES 
-(1, '08:00:00', 500),
-(1, '18:00:00', 500),
-(2, '07:00:00', 400),
-(3, '12:00:00', 600);
+(1, 'Monday', '08:00:00', 500),
+(1, 'Wednesday', '18:00:00', 500),
+(2, 'Friday', '07:00:00', 400),
+(3, 'Monday', '12:00:00', 600);
 
 -- Dodanie stanów urządzeń
 INSERT INTO device_status (device_id, weight, button_state, led_state, motor_state)

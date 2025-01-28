@@ -17,8 +17,8 @@ router.post('/', authenticate, async (req, res) => {
 
     // Dodanie harmonogramu do bazy danych
     await pool.query(
-      'INSERT INTO schedule (device_id, time, amount_ml) VALUES ($1, $2, $3)',
-      [deviceId, time, amount]
+      'INSERT INTO schedule (device_id, day, time, amount_ml) VALUES ($1, $2, $3, $4)',
+      [deviceId, day, time, amount]
     );
 
     res.status(201).send({ message: 'Schedule created successfully.' });
@@ -41,7 +41,7 @@ router.get('/:deviceId', authenticate, async (req, res) => {
 
     // Pobranie harmonogramu z bazy danych
     const result = await pool.query(
-      'SELECT * FROM schedule WHERE device_id = $1 ORDER BY time',
+      'SELECT * FROM schedule WHERE device_id = $1 ORDER BY day, time',
       [deviceId]
     );
 
@@ -90,7 +90,10 @@ router.post('/:deviceId/send-schedule', authenticate, async (req, res) => {
       return res.status(403).send({ error: 'You do not have access to this device.' });
     }
 
-    const schedule = await pool.query('SELECT * FROM schedule WHERE device_id = $1 ORDER BY time', [deviceId]);
+    const schedule = await pool.query(
+      'SELECT day, time, amount_ml FROM schedule WHERE device_id = $1 ORDER BY day, time',
+      [deviceId]
+    );
 
     const topic = `hydrapet${deviceId}/update/set/schedule`;
     mqttClient.publish(topic, JSON.stringify({ schedule: schedule.rows }));
