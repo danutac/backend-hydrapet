@@ -90,7 +90,7 @@ VALUES
 (2, 'Pet Water Fountain');
 
 -- Dodanie harmonogramów
-INSERT INTO schedule (device_id, time, amount_ml)
+INSERT INTO schedule (device_id, day, time, amount_ml)
 VALUES 
 (1, 'Monday', '08:00:00', 500),
 (1, 'Wednesday', '18:00:00', 500),
