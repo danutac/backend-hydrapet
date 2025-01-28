@@ -79,7 +79,7 @@ docker-compose up --build
 
 #### Dostęp do bazy danych PostgreSQL w kontenerze:
 ```sh
-docker exec -it backend-hydrapet-db-1 psql -U postgres
+docker exec -it backend-hydrapet-db-1 psql -U postgres -d yourdatabase
 ```
 
 #### Sprawdzenie czy tabele załadowały się poprawnie:
